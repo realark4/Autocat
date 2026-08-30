@@ -1,0 +1,48 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-windows;net48</TargetFrameworks>
+    <RootNamespace>AutoCadAiPlugin</RootNamespace>
+    <AssemblyName>AutoCadAiPlugin</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <AutoCad2024Dir Condition="'$(AutoCad2024Dir)' == ''">C:\Program Files\Autodesk\AutoCAD 2024</AutoCad2024Dir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCadAiPlugin.Core\AutoCadAiPlugin.Core.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.Cad\AutoCadAiPlugin.Cad.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.Tools\AutoCadAiPlugin.Tools.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.AI\AutoCadAiPlugin.AI.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.Infrastructure\AutoCadAiPlugin.Infrastructure.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.UI\AutoCadAiPlugin.UI.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    <Reference Include="accoremgd">
+      <HintPath>$(AutoCad2024Dir)\accoremgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="acdbmgd">
+      <HintPath>$(AutoCad2024Dir)\acdbmgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="acmgd">
+      <HintPath>$(AutoCad2024Dir)\acmgd.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AcWindows">
+      <HintPath>$(AutoCad2024Dir)\AcWindows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+    <Reference Include="AdWindows">
+      <HintPath>$(AutoCad2024Dir)\AdWindows.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0-windows'">
+    <PackageReference Include="AutoCAD.NET" Version="25.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+    <PackageReference Include="AutoCAD.NET.Model" Version="25.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+    <PackageReference Include="AutoCAD.NET.Core" Version="25.0.0" PrivateAssets="All" ExcludeAssets="runtime" />
+  </ItemGroup>
+</Project>

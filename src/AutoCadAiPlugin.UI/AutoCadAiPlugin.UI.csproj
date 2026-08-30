@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-windows;net48</TargetFrameworks>
+    <RootNamespace>AutoCadAiPlugin.UI</RootNamespace>
+    <AssemblyName>AutoCadAiPlugin.UI</AssemblyName>
+    <UseWPF>true</UseWPF>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCadAiPlugin.Core\AutoCadAiPlugin.Core.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.AI\AutoCadAiPlugin.AI.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.Tools\AutoCadAiPlugin.Tools.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.Infrastructure\AutoCadAiPlugin.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+</Project>

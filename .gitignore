@@ -1,0 +1,38 @@
+## Ignore Visual Studio & .NET build artifacts
+[Bb]in/
+[Oo]bj/
+Autocat.bundle/Contents/
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+.vs/
+.idea/
+.vscode/
+
+## Secrets, Vaults & Local Data (STRICT)
+*.dat
+secrets.dat
+secrets_*.dat
+settings.json
+*.key
+*.pem
+*.token
+*.env
+*.env.*
+!.env.example
+
+## Logs & History
+logs/
+*.log
+history/
+*.jsonl
+
+## Test results
+TestResults/
+*.trx
+
+## Windows OS files
+Thumbs.db
+Desktop.ini
+$RECYCLE.BIN/

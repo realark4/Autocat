@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ApplicationPackage
+    SchemaVersion="1.0"
+    AutodeskProduct="AutoCAD"
+    ProductType="Application"
+    Name="Autocat AI Assistant"
+    AppVersion="1.0.0"
+    Description="Natural Language AI Assistant for AutoCAD with Full CAD Tool Calling"
+    Author="Ark4Studio"
+    ProductCode="{4A7E24D9-6A4B-4E38-9B21-8E61C39BFB20}"
+    UpgradeCode="{B8F688E2-261B-40C9-A427-466F6A6E0E73}">
+
+    <CompanyDetails Name="Ark4Studio" Url="https://github.com/Ark4Studio" Email="support@ark4studio.com" />
+
+    <!-- AutoCAD 2024 (.NET Framework 4.8) -->
+    <Components Description="AutoCAD 2024 Compatibility">
+        <RuntimeRequirements SeriesMin="R24.3" SeriesMax="R24.3" Platform="AutoCAD*" OS="Win64" />
+        <ComponentEntry
+            AppName="Autocat"
+            ModuleName="./Contents/2024/AutoCadAiPlugin.dll"
+            AppDescription="Autocat AI Assistant Plugin for AutoCAD 2024"
+            LoadOnAutoCADStartup="True"
+            LoadOnCommandInvocation="True">
+            <Commands GroupName="AUTOCAT">
+                <Command Global="AICAD" Local="AICAD" />
+                <Command Global="AICADSETTINGS" Local="AICADSETTINGS" />
+                <Command Global="AICADMOCK" Local="AICADMOCK" />
+            </Commands>
+        </ComponentEntry>
+    </Components>
+
+    <!-- AutoCAD 2025 & 2026 (.NET 8.0) -->
+    <Components Description="AutoCAD 2025/2026 Compatibility">
+        <RuntimeRequirements SeriesMin="R25.0" SeriesMax="R26.0" Platform="AutoCAD*" OS="Win64" />
+        <ComponentEntry
+            AppName="Autocat"
+            ModuleName="./Contents/2025/AutoCadAiPlugin.dll"
+            AppDescription="Autocat AI Assistant Plugin for AutoCAD 2025/2026"
+            LoadOnAutoCADStartup="True"
+            LoadOnCommandInvocation="True">
+            <Commands GroupName="AUTOCAT">
+                <Command Global="AICAD" Local="AICAD" />
+                <Command Global="AICADSETTINGS" Local="AICADSETTINGS" />
+                <Command Global="AICADMOCK" Local="AICADMOCK" />
+            </Commands>
+        </ComponentEntry>
+    </Components>
+</ApplicationPackage>

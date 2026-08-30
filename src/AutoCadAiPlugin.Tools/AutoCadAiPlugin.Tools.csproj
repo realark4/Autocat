@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net8.0-windows;net48</TargetFrameworks>
+    <RootNamespace>AutoCadAiPlugin.Tools</RootNamespace>
+    <AssemblyName>AutoCadAiPlugin.Tools</AssemblyName>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\AutoCadAiPlugin.Core\AutoCadAiPlugin.Core.csproj" />
+    <ProjectReference Include="..\AutoCadAiPlugin.Cad\AutoCadAiPlugin.Cad.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+  </ItemGroup>
+</Project>
