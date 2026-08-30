@@ -21,6 +21,7 @@ public partial class ChatViewModel : ObservableObject
     private readonly ConversationHistoryStore _historyStore;
     private readonly Func<SettingsViewModel> _settingsVmFactory;
     private CancellationTokenSource? _cts;
+    private string? _lastUserPrompt;
 
     [ObservableProperty]
     private string _inputText = string.Empty;
@@ -45,6 +46,9 @@ public partial class ChatViewModel : ObservableObject
 
     [ObservableProperty]
     private string _activeModelName = "mock-agent";
+
+    [ObservableProperty]
+    private bool _canRetryLastMessage;
 
     public ObservableCollection<ChatMessageViewModel> Messages { get; } = new();
     public AiConversation CurrentConversation { get; private set; } = new();
@@ -93,18 +97,23 @@ public partial class ChatViewModel : ObservableObject
         string prompt = InputText.Trim();
         InputText = string.Empty;
 
-        var userMsg = new ChatMessageViewModel("user", prompt);
-        Messages.Add(userMsg);
+        _lastUserPrompt = prompt;
+        CanRetryLastMessage = true;
+        Messages.Add(new ChatMessageViewModel("user", prompt));
 
         IsBusy = true;
+        StatusMessage = _configManager.Config.Language == "fa"
+            ? "در حال آماده‌سازی درخواست..."
+            : "Preparing request...";
         _cts = new CancellationTokenSource();
+        ChatMessageViewModel? assistantMsg = null;
 
         try
         {
             var config = await _configManager.LoadConfigWithSecretsAsync();
             UpdateProviderHeaders();
 
-            var assistantMsg = new ChatMessageViewModel("assistant", string.Empty);
+            assistantMsg = new ChatMessageViewModel("assistant", string.Empty, isLoading: true);
             Messages.Add(assistantMsg);
 
             string reply = await _orchestrator.RunConversationTurnAsync(
@@ -114,21 +123,39 @@ public partial class ChatViewModel : ObservableObject
                 RequestUserApprovalAsync,
                 _cts.Token);
 
+            assistantMsg.IsLoading = false;
             assistantMsg.Content = reply;
             await _historyStore.SaveConversationAsync(CurrentConversation);
         }
         catch (OperationCanceledException)
         {
-            StatusMessage = "Operation stopped by user.";
+            if (assistantMsg != null)
+            {
+                assistantMsg.IsLoading = false;
+                assistantMsg.Content = _configManager.Config.Language == "fa"
+                    ? "عملیات به درخواست شما متوقف شد."
+                    : "The operation was stopped.";
+            }
+            StatusMessage = _configManager.Config.Language == "fa" ? "متوقف شد" : "Stopped";
         }
         catch (Exception ex)
         {
-            Messages.Add(new ChatMessageViewModel("assistant", $"Error: {ex.Message}"));
+            if (assistantMsg == null)
+            {
+                assistantMsg = new ChatMessageViewModel("assistant", string.Empty);
+                Messages.Add(assistantMsg);
+            }
+            assistantMsg.IsLoading = false;
+            assistantMsg.Content = $"Error: {ex.Message}";
         }
         finally
         {
+            if (assistantMsg != null)
+            {
+                assistantMsg.IsLoading = false;
+            }
             IsBusy = false;
-            StatusMessage = "Ready";
+            StatusMessage = _configManager.Config.Language == "fa" ? "آماده" : "Ready";
             _cts?.Dispose();
             _cts = null;
         }
@@ -138,13 +165,25 @@ public partial class ChatViewModel : ObservableObject
     private void Stop()
     {
         _cts?.Cancel();
-        IsBusy = false;
-        StatusMessage = "Cancelled";
+        StatusMessage = _configManager.Config.Language == "fa"
+            ? "در حال توقف..."
+            : "Stopping...";
+    }
+
+    [RelayCommand]
+    private async Task RetryLastMessageAsync()
+    {
+        if (IsBusy || string.IsNullOrWhiteSpace(_lastUserPrompt)) return;
+
+        InputText = _lastUserPrompt;
+        await SendMessageAsync();
     }
 
     [RelayCommand]
     private void QuickPrompt(string promptText)
     {
+        if (IsBusy || string.IsNullOrWhiteSpace(promptText)) return;
+
         InputText = promptText;
         SendMessageCommand.Execute(null);
     }
@@ -152,7 +191,11 @@ public partial class ChatViewModel : ObservableObject
     [RelayCommand]
     private void NewChat()
     {
+        if (IsBusy) return;
+
         CurrentConversation = new AiConversation();
+        _lastUserPrompt = null;
+        CanRetryLastMessage = false;
         Messages.Clear();
         InitializeWelcomeMessage();
     }
@@ -160,8 +203,14 @@ public partial class ChatViewModel : ObservableObject
     [RelayCommand]
     private void ClearChat()
     {
+        if (IsBusy) return;
+
+        CurrentConversation = new AiConversation();
+        _lastUserPrompt = null;
+        CanRetryLastMessage = false;
         Messages.Clear();
         InitializeWelcomeMessage();
+        StatusMessage = _configManager.Config.Language == "fa" ? "گفت‌وگو پاک شد" : "Chat cleared";
     }
 
     [RelayCommand]
@@ -239,6 +288,12 @@ public partial class ChatViewModel : ObservableObject
 
     private void HandleStatusMessage(string message)
     {
-        StatusMessage = message;
+        if (Application.Current?.Dispatcher == null || Application.Current.Dispatcher.CheckAccess())
+        {
+            StatusMessage = message;
+            return;
+        }
+
+        Application.Current.Dispatcher.Invoke(() => StatusMessage = message);
     }
 }
