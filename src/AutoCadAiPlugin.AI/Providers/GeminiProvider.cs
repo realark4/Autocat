@@ -206,7 +206,10 @@ public class GeminiProvider : IAiProvider
                     };
                     if (!string.IsNullOrEmpty(tc.ThoughtSignature))
                     {
-                        fnPart["thought_signature"] = tc.ThoughtSignature;
+                        // Gemini's REST JSON field is camelCase. The API error refers to
+                        // this value as thought_signature, but sending that snake_case key
+                        // causes it to be ignored and breaks the next function-calling step.
+                        fnPart["thoughtSignature"] = tc.ThoughtSignature;
                     }
                     parts.Add(fnPart);
                 }
@@ -330,7 +333,8 @@ public class GeminiProvider : IAiProvider
                 }
 
                 string? thoughtSig = null;
-                if (part.TryGetProperty("thought_signature", out var sigProp))
+                if (part.TryGetProperty("thoughtSignature", out var sigProp) ||
+                    part.TryGetProperty("thought_signature", out sigProp))
                 {
                     thoughtSig = sigProp.GetString();
                 }
