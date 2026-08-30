@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Text.Json;
 using System.Threading.Tasks;
+using System.Windows;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using AutoCadAiPlugin.Core.Enums;
@@ -125,6 +126,9 @@ public partial class ChatMessageViewModel : ObservableObject
     private DateTime _timestamp = DateTime.Now;
 
     [ObservableProperty]
+    private bool _isLoading;
+
+    [ObservableProperty]
     private ObservableCollection<ToolExecutionItemViewModel> _toolExecutions = new();
 
     public bool IsUser => Role.Equals("user", StringComparison.OrdinalIgnoreCase);
@@ -132,10 +136,27 @@ public partial class ChatMessageViewModel : ObservableObject
     public bool HasToolExecutions => ToolExecutions.Count > 0;
     public bool HasContent => !string.IsNullOrWhiteSpace(Content);
 
-    public ChatMessageViewModel(string role, string content)
+    public ChatMessageViewModel(string role, string content, bool isLoading = false)
     {
         _role = role;
         _content = content;
+        _isLoading = isLoading;
         _timestamp = DateTime.Now;
+    }
+
+    [RelayCommand(CanExecute = nameof(CanCopyContent))]
+    private void CopyContent()
+    {
+        if (CanCopyContent())
+        {
+            Clipboard.SetText(Content);
+        }
+    }
+
+    private bool CanCopyContent() => HasContent;
+
+    partial void OnContentChanged(string value)
+    {
+        CopyContentCommand.NotifyCanExecuteChanged();
     }
 }
