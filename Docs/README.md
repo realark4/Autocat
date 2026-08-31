@@ -7,7 +7,7 @@
 ## 🌟 Key Features
 
 - 🤖 **Autonomous Multi-Turn CAD Agent**: Recursively plans, executes, inspects drawing status, and refines drafting operations.
-- 🌐 **Multi-Provider Support**: Seamless support for **OpenAI** (GPT-4o, o3-mini), **Google Gemini** (Gemini 2.0 Flash, 1.5 Pro), **Anthropic** (Claude 3.7 Sonnet), and custom endpoints (Ollama, LM Studio).
+- 🌐 **Multi-Provider Support**: Seamless support for **OpenAI / OpenAI-compatible gateways** (GPT-4o, o3-mini, OpenRouter, Ollama, LM Studio), **Google Gemini**, **Anthropic**, and Mock mode. OpenAI-compatible Base URL and model IDs can be entered manually.
 - 🧪 **Deterministic Mock Provider**: Test and demo complex CAD scenarios completely offline without API keys or internet connection.
 - 📐 **30+ Native CAD Tools**: Full support for Line, Circle, Arc, Polyline, Rectangle, Ellipse, Move, Copy, Rotate, Scale, Mirror, Fillet, Offset, Trim, Extend, Erase, Linear/Aligned/Radial/Diametric Dimensions, Text/MText, and View/Zoom controls.
 - 🔒 **Zero-Trust Security & DPAPI Vault**: API keys are securely encrypted using the Windows Data Protection API (DPAPI) and never leak to plain text files, logs, or history.

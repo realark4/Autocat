@@ -30,7 +30,7 @@ public partial class ChatViewModel : ObservableObject
     private bool _isBusy;
 
     [ObservableProperty]
-    private string _statusMessage = "Ready";
+    private string _statusMessage = "آماده";
 
     [ObservableProperty]
     private FlowDirection _chatFlowDirection = FlowDirection.RightToLeft;
@@ -77,6 +77,10 @@ public partial class ChatViewModel : ObservableObject
         ActiveProviderName = cfg.ProviderType.ToString();
         ActiveModelName = cfg.Model;
         ChatFlowDirection = cfg.Language == "fa" ? FlowDirection.RightToLeft : FlowDirection.LeftToRight;
+        if (!IsBusy)
+        {
+            StatusMessage = cfg.Language == "fa" ? "آماده" : "Ready";
+        }
     }
 
     private void InitializeWelcomeMessage()
@@ -218,7 +222,9 @@ public partial class ChatViewModel : ObservableObject
     {
         string md = _historyStore.ExportConversationToMarkdown(CurrentConversation);
         Clipboard.SetText(md);
-        StatusMessage = "Chat copied to clipboard as Markdown!";
+        StatusMessage = _configManager.Config.Language == "fa"
+            ? "گفت‌وگو به‌صورت Markdown کپی شد"
+            : "Chat copied as Markdown";
     }
 
     [RelayCommand]

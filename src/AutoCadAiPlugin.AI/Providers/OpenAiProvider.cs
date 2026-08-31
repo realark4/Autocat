@@ -15,6 +15,10 @@ namespace AutoCadAiPlugin.AI.Providers;
 
 public class OpenAiProvider : IAiProvider
 {
+    private const string DefaultBaseUrl = "https://api.openai.com/v1";
+    private const string ChatCompletionsPath = "chat/completions";
+    private const string ModelsPath = "models";
+
     private readonly HttpClient _httpClient;
     public AiProviderType ProviderType => AiProviderType.OpenAI;
 
@@ -29,31 +33,29 @@ public class OpenAiProvider : IAiProvider
         AiProviderConfig config,
         CancellationToken cancellationToken = default)
     {
-        string baseUrl = string.IsNullOrWhiteSpace(config.BaseUrl) ? "https://api.openai.com/v1" : config.BaseUrl.TrimEnd('/');
-        string url = $"{baseUrl}/chat/completions";
-
-        var payload = BuildOpenAiPayload(history, availableTools, config);
-        string requestJson = JsonSerializer.Serialize(payload);
-
-        using var request = new HttpRequestMessage(HttpMethod.Post, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", config.ApiKey ?? string.Empty);
-        request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
-
         try
         {
+            Uri endpoint = BuildEndpointUri(config.BaseUrl, ChatCompletionsPath);
+            var payload = BuildOpenAiPayload(history, availableTools, config);
+            string requestJson = JsonSerializer.Serialize(payload);
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, endpoint);
+            AddBearerToken(request, config.ApiKey);
+            request.Content = new StringContent(requestJson, Encoding.UTF8, "application/json");
+
             using var response = await _httpClient.SendAsync(request, cancellationToken);
             string responseBody = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                return AiResponse.Error($"OpenAI API error ({response.StatusCode}): {responseBody}");
+                return AiResponse.Error($"OpenAI-compatible API error ({response.StatusCode}): {responseBody}");
             }
 
             return ParseOpenAiResponse(responseBody);
         }
         catch (Exception ex)
         {
-            return AiResponse.Error($"OpenAI connection error: {ex.Message}");
+            return AiResponse.Error($"OpenAI-compatible connection error: {ex.Message}");
         }
     }
 
@@ -63,16 +65,50 @@ public class OpenAiProvider : IAiProvider
         string? baseUrl = null,
         CancellationToken cancellationToken = default)
     {
-        string host = string.IsNullOrWhiteSpace(baseUrl) ? "https://api.openai.com/v1" : baseUrl.TrimEnd('/');
-        string url = $"{host}/models";
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
         try
         {
+            using var request = new HttpRequestMessage(HttpMethod.Get, BuildEndpointUri(baseUrl, ModelsPath));
+            AddBearerToken(request, apiKey);
+
             using var response = await _httpClient.SendAsync(request, cancellationToken);
-            return response.IsSuccessStatusCode;
+            if (response.IsSuccessStatusCode)
+            {
+                return true;
+            }
+
+            // A number of OpenAI-compatible gateways expose chat completions but do
+            // not expose /models. Probe the actual configured model in that case.
+            if (response.StatusCode != System.Net.HttpStatusCode.NotFound &&
+                response.StatusCode != System.Net.HttpStatusCode.MethodNotAllowed &&
+                response.StatusCode != System.Net.HttpStatusCode.NotImplemented)
+            {
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(model))
+            {
+                return false;
+            }
+
+            string selectedModel = model?.Trim() ?? string.Empty;
+
+            using var probeRequest = new HttpRequestMessage(
+                HttpMethod.Post,
+                BuildEndpointUri(baseUrl, ChatCompletionsPath));
+            AddBearerToken(probeRequest, apiKey);
+            probeRequest.Content = new StringContent(
+                JsonSerializer.Serialize(new
+                {
+                    model = selectedModel,
+                    messages = new[] { new { role = "user", content = "ping" } },
+                    temperature = 0,
+                    max_tokens = 1
+                }),
+                Encoding.UTF8,
+                "application/json");
+
+            using var probeResponse = await _httpClient.SendAsync(probeRequest, cancellationToken);
+            return probeResponse.IsSuccessStatusCode;
         }
         catch
         {
@@ -87,31 +123,47 @@ public class OpenAiProvider : IAiProvider
     {
         var defaultModels = new List<string> { "gpt-4o", "gpt-4o-mini", "gpt-4-turbo", "o3-mini", "gpt-3.5-turbo" };
 
-        string host = string.IsNullOrWhiteSpace(baseUrl) ? "https://api.openai.com/v1" : baseUrl.TrimEnd('/');
-        string url = $"{host}/models";
-
-        using var request = new HttpRequestMessage(HttpMethod.Get, url);
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
-
         try
         {
+            using var request = new HttpRequestMessage(HttpMethod.Get, BuildEndpointUri(baseUrl, ModelsPath));
+            AddBearerToken(request, apiKey);
+
             using var response = await _httpClient.SendAsync(request, cancellationToken);
             if (response.IsSuccessStatusCode)
             {
                 string json = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(json);
-                if (doc.RootElement.TryGetProperty("data", out var dataArr) && dataArr.ValueKind == JsonValueKind.Array)
+                JsonElement modelsArray;
+                bool hasModels = doc.RootElement.TryGetProperty("data", out modelsArray) &&
+                                 modelsArray.ValueKind == JsonValueKind.Array;
+                if (!hasModels)
+                {
+                    hasModels = doc.RootElement.TryGetProperty("models", out modelsArray) &&
+                                modelsArray.ValueKind == JsonValueKind.Array;
+                }
+
+                if (hasModels)
                 {
                     var models = new List<string>();
-                    foreach (var elem in dataArr.EnumerateArray())
+                    foreach (var elem in modelsArray.EnumerateArray())
                     {
-                        if (elem.TryGetProperty("id", out var idProp))
+                        string id = string.Empty;
+                        if (elem.ValueKind == JsonValueKind.String)
                         {
-                            string id = idProp.GetString() ?? string.Empty;
-                            if (id.Contains("gpt") || id.Contains("o1") || id.Contains("o3") || id.Contains("claude") || id.Contains("llama") || id.Contains("qwen"))
-                            {
-                                models.Add(id);
-                            }
+                            id = elem.GetString() ?? string.Empty;
+                        }
+                        else if (elem.ValueKind == JsonValueKind.Object && elem.TryGetProperty("id", out var idProp))
+                        {
+                            id = idProp.GetString() ?? string.Empty;
+                        }
+                        else if (elem.ValueKind == JsonValueKind.Object && elem.TryGetProperty("name", out var nameProp))
+                        {
+                            id = nameProp.GetString() ?? string.Empty;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(id))
+                        {
+                            models.Add(id);
                         }
                     }
                     if (models.Count > 0)
@@ -128,6 +180,54 @@ public class OpenAiProvider : IAiProvider
         }
 
         return defaultModels;
+    }
+
+    private static Uri BuildEndpointUri(string? baseUrl, string endpointPath)
+    {
+        string rawBaseUrl = string.IsNullOrWhiteSpace(baseUrl) ? DefaultBaseUrl : baseUrl?.Trim() ?? DefaultBaseUrl;
+        if (!Uri.TryCreate(rawBaseUrl, UriKind.Absolute, out var baseUri) ||
+            (baseUri.Scheme != Uri.UriSchemeHttp && baseUri.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new InvalidOperationException("Base URL must be an absolute HTTP or HTTPS URL.");
+        }
+
+        string path = baseUri.AbsolutePath.TrimEnd('/');
+        path = RemoveKnownEndpointSuffix(path);
+        path = $"{path.TrimEnd('/')}/{endpointPath.TrimStart('/')}";
+
+        var builder = new UriBuilder(baseUri)
+        {
+            Path = path,
+            Fragment = string.Empty
+        };
+        return builder.Uri;
+    }
+
+    private static string RemoveKnownEndpointSuffix(string path)
+    {
+        string[] knownSuffixes = { "/chat/completions", "/models" };
+        foreach (string suffix in knownSuffixes)
+        {
+            if (path.Equals(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return string.Empty;
+            }
+
+            if (path.EndsWith(suffix, StringComparison.OrdinalIgnoreCase))
+            {
+                return path.Substring(0, path.Length - suffix.Length).TrimEnd('/');
+            }
+        }
+
+        return path;
+    }
+
+    private static void AddBearerToken(HttpRequestMessage request, string? apiKey)
+    {
+        if (!string.IsNullOrWhiteSpace(apiKey))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey?.Trim());
+        }
     }
 
     private static object BuildOpenAiPayload(List<AiMessage> history, List<ToolDefinition> availableTools, AiProviderConfig config)
@@ -217,7 +317,7 @@ public class OpenAiProvider : IAiProvider
 
         return new
         {
-            model = string.IsNullOrWhiteSpace(config.Model) ? "gpt-4o" : config.Model,
+            model = string.IsNullOrWhiteSpace(config.Model) ? "gpt-4o" : config.Model.Trim(),
             messages,
             tools = tools.Count > 0 ? tools : null,
             temperature = config.Temperature,

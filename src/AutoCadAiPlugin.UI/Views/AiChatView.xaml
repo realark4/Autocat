@@ -9,7 +9,8 @@
              d:DesignHeight="700"
              d:DesignWidth="400"
              SnapsToDevicePixels="True"
-             UseLayoutRounding="True">
+             UseLayoutRounding="True"
+             KeyboardNavigation.TabNavigation="Cycle">
 
     <UserControl.Resources>
         <ResourceDictionary>
@@ -22,7 +23,7 @@
         </ResourceDictionary>
     </UserControl.Resources>
 
-    <Grid Background="{StaticResource BgBrush}"
+    <Grid Background="{StaticResource PageBackgroundBrush}"
           FlowDirection="{Binding ChatFlowDirection}">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -31,23 +32,23 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <!-- Calm, compact header with clear product and connection hierarchy. -->
+        <!-- Compact product header: identity, model and current activity are visible at a glance. -->
         <Border Grid.Row="0"
                 Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
                 BorderThickness="0,0,0,1"
-                Padding="16,14">
-            <Grid>
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
+                Padding="14,12">
+            <Grid FlowDirection="LeftToRight">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                </Grid.RowDefinitions>
 
-                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                <StackPanel Grid.Row="0" Orientation="Horizontal" VerticalAlignment="Center">
                     <Border Width="38"
                             Height="38"
                             Background="{StaticResource AccentGradientBrush}"
-                            CornerRadius="11">
+                            CornerRadius="12">
                         <TextBlock Text="A"
                                    FontFamily="{StaticResource AppFont}"
                                    FontSize="20"
@@ -57,7 +58,9 @@
                                    VerticalAlignment="Center" />
                     </Border>
 
-                    <StackPanel Margin="12,0,0,0" VerticalAlignment="Center">
+                    <StackPanel Margin="11,0,0,0"
+                                VerticalAlignment="Center"
+                                FlowDirection="{Binding ChatFlowDirection}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="AUTOCAT"
                                        FontFamily="{StaticResource AppFont}"
@@ -68,74 +71,115 @@
                             <Border Background="{StaticResource CardElevatedBrush}"
                                     BorderBrush="{StaticResource CardBorderBrush}"
                                     BorderThickness="1"
-                                    CornerRadius="5"
+                                    CornerRadius="6"
                                     Padding="6,2"
                                     Margin="8,0,0,0"
                                     VerticalAlignment="Center">
-                                <TextBlock Text="{Binding ActiveProviderName}"
+                                <TextBlock Text="AI CAD"
                                            FontFamily="{StaticResource AppFont}"
-                                           FontSize="10"
-                                           Foreground="{StaticResource TextSecondaryBrush}" />
+                                           FontSize="9"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource AccentHoverBrush}" />
                             </Border>
                         </StackPanel>
-                        <TextBlock Text="دستیار هوشمند طراحی در AutoCAD"
+                        <TextBlock Text="دستیار هوشمند برای AutoCAD"
                                    FontFamily="{StaticResource AppFont}"
-                                   FontSize="11"
+                                   FontSize="10"
                                    Foreground="{StaticResource TextMutedBrush}"
-                                   Margin="0,2,0,0" />
+                                   Margin="0,3,0,0" />
                     </StackPanel>
                 </StackPanel>
 
-                <StackPanel Grid.Column="1"
+                <StackPanel Grid.Row="1"
                             Orientation="Horizontal"
-                            VerticalAlignment="Center">
+                            VerticalAlignment="Center"
+                            HorizontalAlignment="Right"
+                            Margin="0,10,0,0"
+                            FlowDirection="LeftToRight">
                     <Border Background="{StaticResource CardBgBrush}"
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="9"
-                            Padding="8,6"
-                            Margin="0,0,8,0"
-                            ToolTip="وضعیت اتصال و عملیات جاری">
-                        <StackPanel Orientation="Horizontal">
-                            <Ellipse Width="7"
-                                     Height="7"
-                                     Margin="0,0,6,0"
-                                     VerticalAlignment="Center">
-                                <Ellipse.Style>
-                                    <Style TargetType="Ellipse">
-                                        <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding IsBusy}" Value="True">
-                                                <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Ellipse.Style>
-                            </Ellipse>
-                            <TextBlock Text="{Binding StatusMessage}"
+                            CornerRadius="10"
+                            Padding="9,6"
+                            Margin="0,0,9,0"
+                            ToolTip="وضعیت و مدل فعال">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Ellipse Width="7"
+                                         Height="7"
+                                         Margin="0,0,6,0"
+                                         VerticalAlignment="Center">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{StaticResource SuccessBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsBusy}" Value="True">
+                                                    <Setter Property="Fill" Value="{StaticResource AccentBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding StatusMessage}"
+                                           FontFamily="{StaticResource AppFont}"
+                                           FontSize="10"
+                                           FontWeight="SemiBold"
+                                           Foreground="{StaticResource TextSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis"
+                                           MaxWidth="96" />
+                            </StackPanel>
+                            <TextBlock Text="{Binding ActiveModelName}"
                                        FontFamily="{StaticResource AppFont}"
-                                       FontSize="10"
-                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                       FontSize="9"
+                                       Foreground="{StaticResource TextMutedBrush}"
                                        TextTrimming="CharacterEllipsis"
-                                       MaxWidth="90"
-                                       VerticalAlignment="Center" />
+                                       MaxWidth="112"
+                                       Margin="13,2,0,0" />
                         </StackPanel>
                     </Border>
 
-                    <Button Content="＋"
-                            Command="{Binding NewChatCommand}"
+                    <Button Command="{Binding NewChatCommand}"
                             Style="{StaticResource IconButtonStyle}"
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                             ToolTip="گفت‌وگوی جدید"
-                            Margin="0,0,6,0" />
-                    <Button Content="↗"
-                            Command="{Binding ExportChatCommand}"
+                            AutomationProperties.Name="گفت‌وگوی جدید"
+                            Margin="0,0,5,0">
+                        <Path Data="{StaticResource PlusIconGeometry}"
+                              Stroke="{StaticResource TextSecondaryBrush}"
+                              StrokeThickness="1.8"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              Width="16"
+                              Height="16"
+                              Stretch="Uniform" />
+                    </Button>
+                    <Button Command="{Binding ExportChatCommand}"
                             Style="{StaticResource IconButtonStyle}"
-                            ToolTip="کپی خروجی Markdown"
-                            Margin="0,0,6,0" />
-                    <Button Content="⚙"
-                            Command="{Binding OpenSettingsCommand}"
+                            ToolTip="کپی گفت‌وگو به‌صورت Markdown"
+                            AutomationProperties.Name="کپی گفت‌وگو"
+                            Margin="0,0,5,0">
+                        <Path Data="{StaticResource ExportIconGeometry}"
+                              Stroke="{StaticResource TextSecondaryBrush}"
+                              StrokeThickness="1.6"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              StrokeLineJoin="Round"
+                              Width="17"
+                              Height="17"
+                              Stretch="Uniform" />
+                    </Button>
+                    <Button Command="{Binding OpenSettingsCommand}"
                             Style="{StaticResource IconButtonStyle}"
-                            ToolTip="تنظیمات اتصال" />
+                            ToolTip="تنظیمات"
+                            AutomationProperties.Name="تنظیمات">
+                        <Path Data="{StaticResource SettingsIconGeometry}"
+                              Stroke="{StaticResource TextSecondaryBrush}"
+                              StrokeThickness="1.35"
+                              StrokeLineJoin="Round"
+                              Width="18"
+                              Height="18"
+                              Stretch="Uniform" />
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -150,30 +194,31 @@
                      BorderThickness="0"
                      Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
 
-        <!-- Messages -->
+        <!-- Conversation area. The bubbles stay light; tool details are visually secondary. -->
         <ScrollViewer x:Name="MessagesScrollViewer"
                       Grid.Row="1"
-                      Padding="16,18,16,8"
+                      Padding="15,18,12,8"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       CanContentScroll="True">
             <ItemsControl ItemsSource="{Binding Messages}">
                 <ItemsControl.ItemTemplate>
                     <DataTemplate>
-                        <Grid Margin="0,0,0,14">
+                        <Grid Margin="0,0,0,16">
                             <!-- User message -->
                             <StackPanel HorizontalAlignment="Right"
-                                        MaxWidth="330"
+                                        MaxWidth="340"
                                         Visibility="{Binding IsUser, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <TextBlock Text="شما"
                                            FontFamily="{StaticResource AppFont}"
                                            FontSize="10"
+                                           FontWeight="SemiBold"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            HorizontalAlignment="Right"
-                                           Margin="0,0,4,5" />
+                                           Margin="0,0,5,5" />
                                 <Border Background="{StaticResource UserBubbleBrush}"
-                                        CornerRadius="14,14,4,14"
-                                        Padding="13,10">
+                                        CornerRadius="15,15,4,15"
+                                        Padding="14,10">
                                     <TextBlock Text="{Binding Content}"
                                                FontFamily="{StaticResource AppFont}"
                                                FontSize="13"
@@ -185,26 +230,26 @@
                                            FontSize="9"
                                            Foreground="{StaticResource TextMutedBrush}"
                                            HorizontalAlignment="Right"
-                                           Margin="0,4,4,0" />
+                                           Margin="0,4,5,0" />
                             </StackPanel>
 
-                            <!-- Assistant message and tool activity -->
+                            <!-- Assistant response and live tool activity -->
                             <StackPanel HorizontalAlignment="Left"
-                                        MaxWidth="350"
+                                        MaxWidth="390"
                                         Visibility="{Binding IsAssistant, Converter={StaticResource BoolToVisibilityConverter}}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="28" />
+                                        <ColumnDefinition Width="30" />
                                         <ColumnDefinition Width="*" />
                                     </Grid.ColumnDefinitions>
 
                                     <Border Grid.Column="0"
-                                            Width="28"
-                                            Height="28"
+                                            Width="30"
+                                            Height="30"
                                             Background="{StaticResource CardElevatedBrush}"
                                             BorderBrush="{StaticResource AccentDeepBrush}"
                                             BorderThickness="1"
-                                            CornerRadius="9"
+                                            CornerRadius="10"
                                             VerticalAlignment="Top">
                                         <TextBlock Text="A"
                                                    FontFamily="{StaticResource AppFont}"
@@ -240,9 +285,9 @@
                                                     Content="کپی"
                                                     Command="{Binding CopyContentCommand}"
                                                     Style="{StaticResource TextButtonStyle}"
-                                                    FontSize="9"
-                                                    Padding="5,1"
-                                                    MinHeight="20"
+                                                    FontSize="10"
+                                                    Padding="7,2"
+                                                    MinHeight="24"
                                                     ToolTip="کپی پاسخ"
                                                     Visibility="{Binding HasContent, Converter={StaticResource BoolToVisibilityConverter}}" />
                                         </Grid>
@@ -250,8 +295,8 @@
                                         <Border Background="{StaticResource AssistantBubbleBrush}"
                                                 BorderBrush="{StaticResource CardBorderBrush}"
                                                 BorderThickness="1"
-                                                CornerRadius="4,14,14,14"
-                                                Padding="13,11"
+                                                CornerRadius="4,15,15,15"
+                                                Padding="14,12"
                                                 Visibility="{Binding HasContent, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <TextBlock Text="{Binding Content}"
                                                        FontFamily="{StaticResource AppFont}"
@@ -263,24 +308,25 @@
                                         <Border Background="{StaticResource AssistantBubbleBrush}"
                                                 BorderBrush="{StaticResource AccentDeepBrush}"
                                                 BorderThickness="1"
-                                                CornerRadius="4,14,14,14"
-                                                Padding="13,11"
+                                                CornerRadius="4,15,15,15"
+                                                Padding="14,12"
                                                 Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisibilityConverter}}">
                                             <StackPanel>
                                                 <StackPanel Orientation="Horizontal">
-                                                    <TextBlock Text="در حال فکر کردن"
+                                                    <Ellipse Width="6" Height="6" Fill="{StaticResource AccentBrush}" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                                    <TextBlock Text="در حال آماده‌سازی پاسخ"
                                                                FontFamily="{StaticResource AppFont}"
                                                                FontSize="12"
                                                                FontWeight="SemiBold"
                                                                Foreground="{StaticResource TextPrimaryBrush}" />
-                                                    <TextBlock Text="  ·  تحلیل درخواست و برنامه‌ریزی ابزارها"
-                                                               FontFamily="{StaticResource AppFont}"
-                                                               FontSize="10"
-                                                               Foreground="{StaticResource TextMutedBrush}"
-                                                               VerticalAlignment="Center" />
                                                 </StackPanel>
+                                                <TextBlock Text="تحلیل درخواست و بررسی ابزارهای مناسب برای نقشه"
+                                                           FontFamily="{StaticResource AppFont}"
+                                                           FontSize="10"
+                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                           Margin="13,4,0,0" />
                                                 <ProgressBar Height="3"
-                                                             Margin="0,9,0,0"
+                                                             Margin="0,10,0,0"
                                                              IsIndeterminate="True"
                                                              Foreground="{StaticResource AccentBrush}"
                                                              Background="{StaticResource CardBorderBrush}"
@@ -304,71 +350,66 @@
             </ItemsControl>
         </ScrollViewer>
 
-        <!-- Quick actions -->
+        <!-- A short set of high-value examples keeps discovery useful without taking over the panel. -->
         <Border Grid.Row="2"
                 Background="{StaticResource SurfaceBrush}"
                 BorderBrush="{StaticResource CardBorderBrush}"
                 BorderThickness="0,1,0,0"
-                Padding="14,10,14,9">
+                Padding="15,10,15,8">
             <StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="2,0,0,8">
-                    <TextBlock Text="شروع سریع"
+                <Grid Margin="2,0,2,8">
+                    <TextBlock Text="پیشنهادهای سریع"
                                FontFamily="{StaticResource AppFont}"
                                FontSize="11"
                                FontWeight="SemiBold"
                                Foreground="{StaticResource TextSecondaryBrush}" />
-                    <TextBlock Text="  ·  ترسیم، ویرایش و بررسی نقشه"
+                    <TextBlock Text="برای شروع، یکی را انتخاب کنید"
                                FontFamily="{StaticResource AppFont}"
                                FontSize="10"
-                               Foreground="{StaticResource TextMutedBrush}" />
-                </StackPanel>
+                               Foreground="{StaticResource TextMutedBrush}"
+                               HorizontalAlignment="Right" />
+                </Grid>
 
                 <ScrollViewer HorizontalScrollBarVisibility="Auto"
-                              VerticalScrollBarVisibility="Disabled">
+                              VerticalScrollBarVisibility="Disabled"
+                              Padding="0,0,0,2">
                     <StackPanel Orientation="Horizontal">
                         <Button Content="مستطیل ۲۰۰ × ۱۰۰"
                                 Command="{Binding QuickPromptCommand}"
                                 CommandParameter="یک مستطیل 200 در 100 بکش"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 Style="{StaticResource QuickPillButtonStyle}" />
                         <Button Content="سوراخ Ø۴۰ در مرکز"
                                 Command="{Binding QuickPromptCommand}"
                                 CommandParameter="وسط مستطیل یک سوراخ با قطر 40 ایجاد کن"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 Style="{StaticResource QuickPillButtonStyle}" />
                         <Button Content="درج ابعاد"
                                 Command="{Binding QuickPromptCommand}"
                                 CommandParameter="روی مستطیل ابعاد اصلی را درج کن"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 Style="{StaticResource QuickPillButtonStyle}" />
                         <Button Content="زوم کلی"
                                 Command="{Binding QuickPromptCommand}"
                                 CommandParameter="زوم کلی کن"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 Style="{StaticResource QuickPillButtonStyle}" />
                         <Button Content="گزارش نقشه"
                                 Command="{Binding QuickPromptCommand}"
                                 CommandParameter="اطلاعات و خلاصه‌ای از نقشه فعلی بده"
-                                Style="{StaticResource QuickPillButtonStyle}" />
-                        <Button Content="بررسی انتخاب"
-                                Command="{Binding QuickPromptCommand}"
-                                CommandParameter="آبجکت‌های انتخاب‌شده را بررسی و مشخصاتشان را گزارش کن"
-                                Style="{StaticResource QuickPillButtonStyle}" />
-                        <Button Content="کپی ۵۰ واحد راست"
-                                Command="{Binding QuickPromptCommand}"
-                                CommandParameter="آبجکت انتخاب‌شده را 50 واحد به سمت راست کپی کن"
-                                Style="{StaticResource QuickPillButtonStyle}" />
-                        <Button Content="فیلت R20"
-                                Command="{Binding QuickPromptCommand}"
-                                CommandParameter="روی گوشه‌های آبجکت انتخاب‌شده فیلت با شعاع 20 اعمال کن"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 Style="{StaticResource QuickPillButtonStyle}" />
                     </StackPanel>
                 </ScrollViewer>
             </StackPanel>
         </Border>
 
-        <!-- Composer -->
+        <!-- Composer: the primary action has the strongest visual weight and remains available at the bottom. -->
         <Border Grid.Row="3"
                 Background="{StaticResource SurfaceBrush}"
-                Padding="14,3,14,14">
+                Padding="15,5,15,14">
             <StackPanel>
-                <Grid>
+                <Grid FlowDirection="LeftToRight">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="Auto" />
@@ -378,7 +419,7 @@
                             Background="{StaticResource InputBgBrush}"
                             BorderBrush="{StaticResource InputBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="11">
+                            CornerRadius="12">
                         <Grid>
                             <TextBox x:Name="ComposerTextBox"
                                      Text="{Binding InputText, UpdateSourceTrigger=PropertyChanged}"
@@ -387,21 +428,23 @@
                                      Background="Transparent"
                                      BorderBrush="Transparent"
                                      BorderThickness="0"
-                                     Padding="12,10"
-                                     MinHeight="44"
+                                     Padding="13,11"
+                                     MinHeight="46"
                                      AcceptsReturn="False"
                                      VerticalContentAlignment="Center"
+                                     FlowDirection="{Binding ChatFlowDirection}"
                                      ToolTip="درخواست خود را برای ترسیم یا ویرایش بنویسید">
                                 <TextBox.InputBindings>
                                     <KeyBinding Key="Return" Command="{Binding SendMessageCommand}" />
                                 </TextBox.InputBindings>
                             </TextBox>
                             <TextBlock Text="مثلاً: یک پلان ۶×۴ با در و پنجره رسم کن..."
-                                       Margin="13,0"
+                                       Margin="14,0"
                                        FontFamily="{StaticResource AppFont}"
                                        FontSize="12"
                                        Foreground="{StaticResource TextMutedBrush}"
                                        VerticalAlignment="Center"
+                                       FlowDirection="{Binding ChatFlowDirection}"
                                        IsHitTestVisible="False">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock">
@@ -421,47 +464,73 @@
                     </Border>
 
                     <Button Grid.Column="1"
-                            Content="ارسال  →"
                             Command="{Binding SendMessageCommand}"
                             Style="{StaticResource PrimaryButtonStyle}"
-                            MinWidth="82"
+                            Width="46"
+                            Height="46"
+                            MinHeight="46"
+                            Padding="0"
                             Margin="8,0,0,0"
-                            Visibility="{Binding IsBusy, Converter={StaticResource InverseBoolToVisibilityConverter}}" />
+                            ToolTip="ارسال درخواست (Enter)"
+                            AutomationProperties.Name="ارسال درخواست"
+                            Visibility="{Binding IsBusy, Converter={StaticResource InverseBoolToVisibilityConverter}}">
+                        <Path Data="{StaticResource SendIconGeometry}"
+                              Fill="#FFFFFF"
+                              Width="19"
+                              Height="19"
+                              Stretch="Uniform" />
+                    </Button>
                     <Button Grid.Column="1"
-                            Content="توقف  ×"
                             Command="{Binding StopCommand}"
                             Style="{StaticResource SecondaryButtonStyle}"
                             Background="{StaticResource DangerBrush}"
                             Foreground="#FFFFFF"
-                            MinWidth="82"
+                            Width="46"
+                            Height="46"
+                            MinHeight="46"
+                            Padding="0"
                             Margin="8,0,0,0"
-                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}" />
+                            ToolTip="توقف عملیات"
+                            AutomationProperties.Name="توقف عملیات"
+                            Visibility="{Binding IsBusy, Converter={StaticResource BoolToVisibilityConverter}}">
+                        <Path Data="{StaticResource CloseIconGeometry}"
+                              Stroke="#FFFFFF"
+                              StrokeThickness="1.8"
+                              StrokeStartLineCap="Round"
+                              StrokeEndLineCap="Round"
+                              Width="17"
+                              Height="17"
+                              Stretch="Uniform" />
+                    </Button>
                 </Grid>
 
-                <Grid Margin="2,7,2,0">
+                <Grid Margin="2,7,2,0" FlowDirection="LeftToRight">
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
                         <TextBlock Text="Enter برای ارسال"
                                    FontFamily="{StaticResource AppFont}"
                                    FontSize="10"
                                    Foreground="{StaticResource TextMutedBrush}"
-                                   VerticalAlignment="Center" />
+                                   VerticalAlignment="Center"
+                                   FlowDirection="{Binding ChatFlowDirection}" />
                         <Button Content="تلاش مجدد"
                                 Command="{Binding RetryLastMessageCommand}"
                                 Style="{StaticResource TextButtonStyle}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 FontSize="10"
                                 Padding="7,2"
-                                MinHeight="22"
+                                MinHeight="24"
                                 Margin="8,0,0,0"
                                 Visibility="{Binding CanRetryLastMessage, Converter={StaticResource BoolToVisibilityConverter}}" />
                         <Button Content="پاک‌کردن"
                                 Command="{Binding ClearChatCommand}"
                                 Style="{StaticResource TextButtonStyle}"
+                                IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBooleanConverter}}"
                                 FontSize="10"
                                 Padding="7,2"
-                                MinHeight="22"
+                                MinHeight="24"
                                 Margin="4,0,0,0" />
                     </StackPanel>
-                    <TextBlock Text="{Binding ActiveModelName}"
+                    <TextBlock Text="{Binding ActiveProviderName}"
                                FontFamily="{StaticResource AppFont}"
                                FontSize="10"
                                Foreground="{StaticResource TextMutedBrush}"
@@ -479,9 +548,9 @@
                 Background="{StaticResource OverlayBrush}"
                 Visibility="{Binding IsSettingsOpen, Converter={StaticResource BoolToVisibilityConverter}}">
             <local:AiSettingsView DataContext="{Binding CurrentSettingsViewModel}"
-                                  MaxWidth="440"
-                                  MaxHeight="720"
-                                  Margin="20"
+                                  MaxWidth="470"
+                                  MaxHeight="740"
+                                  Margin="18"
                                   HorizontalAlignment="Center"
                                   VerticalAlignment="Center"
                                   Effect="{StaticResource DialogShadow}" />

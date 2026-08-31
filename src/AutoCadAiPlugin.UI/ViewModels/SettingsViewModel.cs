@@ -51,6 +51,9 @@ public partial class SettingsViewModel : ObservableObject
     private bool _isTestingConnection;
 
     [ObservableProperty]
+    private bool _isLoadingModels;
+
+    [ObservableProperty]
     private string? _connectionStatusMessage;
 
     [ObservableProperty]
@@ -94,7 +97,9 @@ public partial class SettingsViewModel : ObservableObject
         _selectedLanguage = cfg.Language;
         _selectedTheme = cfg.Theme;
 
-        UpdateModelsForProvider();
+        // Keep a model saved from a proxy or local gateway even when it is not
+        // part of the built-in suggestions.
+        UpdateModelsForProvider(preserveCurrentModel: true);
     }
 
     partial void OnSelectedProviderChanged(AiProviderType value)
@@ -102,8 +107,9 @@ public partial class SettingsViewModel : ObservableObject
         UpdateModelsForProvider();
     }
 
-    private void UpdateModelsForProvider()
+    private void UpdateModelsForProvider(bool preserveCurrentModel = false)
     {
+        string currentModel = SelectedModel?.Trim() ?? string.Empty;
         AvailableModels.Clear();
         switch (SelectedProvider)
         {
@@ -133,46 +139,132 @@ public partial class SettingsViewModel : ObservableObject
                 break;
         }
 
-        if (AvailableModels.Count > 0 && !AvailableModels.Contains(SelectedModel))
+        if (preserveCurrentModel && !string.IsNullOrWhiteSpace(currentModel))
+        {
+            if (!AvailableModels.Contains(currentModel))
+            {
+                AvailableModels.Insert(0, currentModel);
+            }
+
+            SelectedModel = currentModel;
+        }
+        else if (AvailableModels.Count > 0)
         {
             SelectedModel = AvailableModels[0];
         }
     }
 
     [RelayCommand]
+    private async Task LoadModelsAsync()
+    {
+        if (IsLoadingModels || IsTestingConnection) return;
+
+        IAiProvider? targetProvider = FindSelectedProvider();
+        bool isFa = SelectedLanguage == "fa";
+        if (targetProvider == null)
+        {
+            ConnectionStatusMessage = isFa ? "سرویس‌دهنده پیدا نشد." : "Selected provider not found.";
+            return;
+        }
+
+        if (!IsValidBaseUrl(BaseUrl))
+        {
+            ConnectionStatusMessage = isFa
+                ? "Base URL باید یک آدرس کامل با http:// یا https:// باشد."
+                : "Base URL must be an absolute http:// or https:// URL.";
+            return;
+        }
+
+        IsLoadingModels = true;
+        ConnectionStatusMessage = isFa ? "در حال دریافت مدل‌ها..." : "Loading models...";
+
+        try
+        {
+            string currentModel = SelectedModel?.Trim() ?? string.Empty;
+            var models = await targetProvider.GetSupportedModelsAsync(ApiKey, BaseUrl);
+
+            AvailableModels.Clear();
+            foreach (string model in models)
+            {
+                string cleanModel = model?.Trim() ?? string.Empty;
+                if (!string.IsNullOrWhiteSpace(cleanModel) && !AvailableModels.Contains(cleanModel))
+                {
+                    AvailableModels.Add(cleanModel);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(currentModel) && !AvailableModels.Contains(currentModel))
+            {
+                AvailableModels.Insert(0, currentModel);
+            }
+
+            if (string.IsNullOrWhiteSpace(SelectedModel) && AvailableModels.Count > 0)
+            {
+                SelectedModel = AvailableModels[0];
+            }
+
+            ConnectionStatusMessage = AvailableModels.Count > 0
+                ? (isFa ? $"{AvailableModels.Count} مدل دریافت شد" : $"{AvailableModels.Count} models loaded")
+                : (isFa ? "مدلی از سرویس دریافت نشد؛ نام مدل را دستی وارد کنید." : "No models returned; enter the model name manually.");
+        }
+        catch (Exception ex)
+        {
+            ConnectionStatusMessage = isFa
+                ? $"دریافت مدل‌ها ناموفق بود: {ex.Message}"
+                : $"Could not load models: {ex.Message}";
+        }
+        finally
+        {
+            IsLoadingModels = false;
+        }
+    }
+
+    [RelayCommand]
     private async Task TestConnectionAsync()
     {
+        bool isFa = SelectedLanguage == "fa";
+        string model = SelectedModel?.Trim() ?? string.Empty;
+        if (SelectedProvider != AiProviderType.Mock && string.IsNullOrWhiteSpace(model))
+        {
+            ConnectionStatusMessage = isFa ? "نام مدل را وارد کنید." : "Enter a model name.";
+            IsConnectionSuccess = false;
+            return;
+        }
+
+        if (!IsValidBaseUrl(BaseUrl))
+        {
+            ConnectionStatusMessage = isFa
+                ? "Base URL باید یک آدرس کامل با http:// یا https:// باشد."
+                : "Base URL must be an absolute http:// or https:// URL.";
+            IsConnectionSuccess = false;
+            return;
+        }
+
         IsTestingConnection = true;
-        ConnectionStatusMessage = "Testing connection...";
+        ConnectionStatusMessage = isFa ? "در حال بررسی اتصال..." : "Testing connection...";
         IsConnectionSuccess = false;
 
-        IAiProvider? targetProvider = null;
-        foreach (var p in _providers)
-        {
-            if (p.ProviderType == SelectedProvider)
-            {
-                targetProvider = p;
-                break;
-            }
-        }
+        IAiProvider? targetProvider = FindSelectedProvider();
 
         if (targetProvider == null)
         {
             IsTestingConnection = false;
-            ConnectionStatusMessage = "Selected provider not found.";
+            ConnectionStatusMessage = isFa ? "سرویس‌دهنده پیدا نشد." : "Selected provider not found.";
             return;
         }
 
         try
         {
-            bool ok = await targetProvider.ValidateConnectionAsync(ApiKey, SelectedModel, BaseUrl);
+            bool ok = await targetProvider.ValidateConnectionAsync(ApiKey, model, BaseUrl);
             IsConnectionSuccess = ok;
-            ConnectionStatusMessage = ok ? "✓ Connection successful!" : "✕ Connection failed. Check API key/URL.";
+            ConnectionStatusMessage = ok
+                ? (isFa ? "✓ اتصال با موفقیت برقرار شد" : "✓ Connection successful")
+                : (isFa ? "✕ اتصال ناموفق بود؛ کلید یا آدرس را بررسی کنید" : "✕ Connection failed; check API key or URL");
         }
         catch (Exception ex)
         {
             IsConnectionSuccess = false;
-            ConnectionStatusMessage = $"✕ Error: {ex.Message}";
+            ConnectionStatusMessage = isFa ? $"✕ خطا: {ex.Message}" : $"✕ Error: {ex.Message}";
         }
         finally
         {
@@ -183,12 +275,28 @@ public partial class SettingsViewModel : ObservableObject
     [RelayCommand]
     private async Task SaveSettingsAsync()
     {
+        bool isFa = SelectedLanguage == "fa";
+        string model = SelectedModel?.Trim() ?? string.Empty;
+        if (SelectedProvider != AiProviderType.Mock && string.IsNullOrWhiteSpace(model))
+        {
+            ConnectionStatusMessage = isFa ? "نام مدل را وارد کنید." : "Enter a model name.";
+            return;
+        }
+
+        if (!IsValidBaseUrl(BaseUrl))
+        {
+            ConnectionStatusMessage = isFa
+                ? "Base URL باید یک آدرس کامل با http:// یا https:// باشد."
+                : "Base URL must be an absolute http:// or https:// URL.";
+            return;
+        }
+
         var newConfig = new AiProviderConfig
         {
             ProviderType = SelectedProvider,
-            Model = SelectedModel,
+            Model = model,
             ApiKey = ApiKey,
-            BaseUrl = string.IsNullOrWhiteSpace(BaseUrl) ? null : BaseUrl,
+            BaseUrl = string.IsNullOrWhiteSpace(BaseUrl) ? null : BaseUrl.Trim(),
             Temperature = Temperature,
             MaxTokens = MaxTokens,
             SendDrawingContext = SendDrawingContext,
@@ -199,6 +307,27 @@ public partial class SettingsViewModel : ObservableObject
 
         await _configManager.SaveConfigWithSecretsAsync(newConfig);
         _onClose?.Invoke();
+    }
+
+    private IAiProvider? FindSelectedProvider()
+    {
+        foreach (var provider in _providers)
+        {
+            if (provider.ProviderType == SelectedProvider)
+            {
+                return provider;
+            }
+        }
+
+        return null;
+    }
+
+    private static bool IsValidBaseUrl(string? baseUrl)
+    {
+        if (string.IsNullOrWhiteSpace(baseUrl)) return true;
+
+        return Uri.TryCreate(baseUrl.Trim(), UriKind.Absolute, out var uri) &&
+               (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
     }
 
     [RelayCommand]

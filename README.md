@@ -11,7 +11,7 @@
 - 🧪 **Deterministic Mock Provider**: Test and demo complex CAD scenarios completely offline without API keys or internet connection.
 - 📐 **30+ Native CAD Tools**: Full support for Line, Circle, Arc, Polyline, Rectangle, Ellipse, Move, Copy, Rotate, Scale, Mirror, Fillet, Offset, Trim, Extend, Erase, Linear/Aligned/Radial/Diametric Dimensions, Text/MText, and View/Zoom controls.
 - 🔒 **Zero-Trust Security & DPAPI Vault**: API keys are securely encrypted using the Windows Data Protection API (DPAPI) and never leak to plain text files, logs, or history.
-- 🎨 **Modern WPF Dockable Panel**: Built with MVVM and CommunityToolkit.Mvvm, featuring Dark/Light themes, Persian RTL and English LTR support, live tool status cards, and user approval modals for destructive actions.
+- 🎨 **Modern WPF Dockable Panel**: Built with MVVM and CommunityToolkit.Mvvm, featuring Dark/Light themes, Persian RTL and English LTR support, live tool status cards, user approval modals for destructive actions, and editable OpenAI-compatible gateway/model settings.
 - ⚡ **AutoCAD Threading & Safe Transactions**: Native `DocumentLock` and atomic transactions ensure drawing integrity and instant single-step Undo support.
 - 📦 **Official Autoloader Bundle**: Ships with `Autocat.bundle` supporting AutoCAD 2024 (.NET Framework 4.8) and AutoCAD 2025/2026 (.NET 8.0).
 

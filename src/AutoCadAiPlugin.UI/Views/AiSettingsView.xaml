@@ -5,8 +5,8 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:conv="clr-namespace:AutoCadAiPlugin.UI.Converters"
              mc:Ignorable="d"
-             d:DesignHeight="550"
-             d:DesignWidth="380"
+             d:DesignHeight="600"
+             d:DesignWidth="430"
              SnapsToDevicePixels="True"
              UseLayoutRounding="True">
 
@@ -16,7 +16,6 @@
                 <ResourceDictionary Source="../Styles/Themes.xaml" />
             </ResourceDictionary.MergedDictionaries>
             <conv:BoolToVisibilityConverter x:Key="BoolToVisibilityConverter" />
-            <conv:InverseBoolToVisibilityConverter x:Key="InverseBoolToVisibilityConverter" />
             <conv:InverseBooleanConverter x:Key="InverseBooleanConverter" />
         </ResourceDictionary>
     </UserControl.Resources>
@@ -24,8 +23,8 @@
     <Border Background="{StaticResource CardBgBrush}"
             BorderBrush="{StaticResource CardBorderStrongBrush}"
             BorderThickness="1"
-            CornerRadius="18"
-            Padding="20">
+            CornerRadius="16"
+            Padding="18">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
@@ -33,32 +32,37 @@
                 <RowDefinition Height="Auto" />
             </Grid.RowDefinitions>
 
-            <!-- Header -->
-            <Grid Grid.Row="0" Margin="0,0,0,18">
+            <!-- Modal header -->
+            <Grid Grid.Row="0" Margin="0,0,0,16" FlowDirection="LeftToRight">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*" />
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
                 <StackPanel Grid.Column="0" Orientation="Horizontal">
-                    <Border Width="34"
-                            Height="34"
+                    <Border Width="36"
+                            Height="36"
                             Background="{StaticResource AccentGradientBrush}"
-                            CornerRadius="10">
-                        <TextBlock Text="⚙"
+                            CornerRadius="11">
+                        <Path Data="{StaticResource SettingsIconGeometry}"
+                              Stroke="#FFFFFF"
+                              StrokeThickness="1.35"
+                              StrokeLineJoin="Round"
+                              Width="18"
+                              Height="18"
+                              Stretch="Uniform"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center" />
+                    </Border>
+                    <StackPanel Margin="11,0,0,0"
+                                VerticalAlignment="Center"
+                                FlowDirection="RightToLeft">
+                        <TextBlock Text="تنظیمات"
                                    FontFamily="{StaticResource AppFont}"
                                    FontSize="17"
-                                   Foreground="#FFFFFF"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
-                    </Border>
-                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="تنظیمات اتصال"
-                                   FontFamily="{StaticResource AppFont}"
-                                   FontSize="16"
                                    FontWeight="Bold"
                                    Foreground="{StaticResource TextPrimaryBrush}" />
-                        <TextBlock Text="AI provider و ظاهر افزونه"
+                        <TextBlock Text="اتصال، حریم خصوصی و ظاهر افزونه"
                                    FontFamily="{StaticResource AppFont}"
                                    FontSize="10"
                                    Foreground="{StaticResource TextMutedBrush}"
@@ -67,78 +71,107 @@
                 </StackPanel>
 
                 <Button Grid.Column="1"
-                        Content="×"
                         Command="{Binding CloseCommand}"
                         Style="{StaticResource IconButtonStyle}"
-                        ToolTip="بستن" />
+                        ToolTip="بستن"
+                        AutomationProperties.Name="بستن تنظیمات">
+                    <Path Data="{StaticResource CloseIconGeometry}"
+                          Stroke="{StaticResource TextSecondaryBrush}"
+                          StrokeThickness="1.7"
+                          StrokeStartLineCap="Round"
+                          StrokeEndLineCap="Round"
+                          Width="16"
+                          Height="16"
+                          Stretch="Uniform" />
+                </Button>
             </Grid>
 
-            <!-- Scrollable form -->
             <ScrollViewer Grid.Row="1"
                           VerticalScrollBarVisibility="Auto"
-                          HorizontalScrollBarVisibility="Disabled">
+                          HorizontalScrollBarVisibility="Disabled"
+                          Padding="1,0,3,0">
                 <StackPanel>
+                    <!-- Provider -->
                     <Border Background="{StaticResource SurfaceBrush}"
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="12"
+                            CornerRadius="11"
                             Padding="13"
-                            Margin="0,0,0,12">
+                            Margin="0,0,0,10">
                         <StackPanel>
-                            <TextBlock Text="مدل هوش مصنوعی"
-                                       FontFamily="{StaticResource AppFont}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentHoverBrush}" />
-                            <TextBlock Text="سرویسی را انتخاب کنید که درخواست‌های طراحی را پردازش می‌کند."
+                            <TextBlock Text="مدل و سرویس"
+                                       Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="موتور پردازش درخواست‌های طراحی را انتخاب کنید."
                                        Style="{StaticResource CaptionTextStyle}"
-                                       Margin="0,3,0,14" />
+                                       Margin="0,3,0,12" />
 
-                            <TextBlock Text="سرویس‌دهنده  ·  Provider"
-                                       Style="{StaticResource FieldLabelStyle}" />
-                            <ComboBox ItemsSource="{Binding Providers}"
-                                      SelectedItem="{Binding SelectedProvider}"
-                                      Style="{StaticResource ModernComboBoxStyle}"
-                                      Margin="0,0,0,12" />
-
-                            <TextBlock Text="مدل  ·  Model"
-                                       Style="{StaticResource FieldLabelStyle}" />
-                            <ComboBox ItemsSource="{Binding AvailableModels}"
-                                      SelectedItem="{Binding SelectedModel}"
-                                      Style="{StaticResource ModernComboBoxStyle}" />
+                            <Grid FlowDirection="LeftToRight">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*" />
+                                    <ColumnDefinition Width="10" />
+                                    <ColumnDefinition Width="*" />
+                                </Grid.ColumnDefinitions>
+                                <StackPanel Grid.Column="0" FlowDirection="RightToLeft">
+                                    <TextBlock Text="سرویس‌دهنده"
+                                               Style="{StaticResource FieldLabelStyle}" />
+                                    <ComboBox ItemsSource="{Binding Providers}"
+                                              SelectedItem="{Binding SelectedProvider}"
+                                              Style="{StaticResource ModernComboBoxStyle}" />
+                                </StackPanel>
+                                <StackPanel Grid.Column="2" FlowDirection="RightToLeft">
+                                    <TextBlock Text="مدل (ورود دستی)"
+                                               Style="{StaticResource FieldLabelStyle}" />
+                                    <ComboBox ItemsSource="{Binding AvailableModels}"
+                                              Text="{Binding SelectedModel, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
+                                              IsEditable="True"
+                                              IsTextSearchEnabled="False"
+                                              Style="{StaticResource ModernComboBoxStyle}" />
+                                    <Button Content="دریافت مدل‌ها"
+                                            Command="{Binding LoadModelsCommand}"
+                                            IsEnabled="{Binding IsLoadingModels, Converter={StaticResource InverseBooleanConverter}}"
+                                            Style="{StaticResource TextButtonStyle}"
+                                            HorizontalAlignment="Left"
+                                            Padding="7,3"
+                                            MinHeight="26"
+                                            Margin="0,5,0,0" />
+                                </StackPanel>
+                            </Grid>
                         </StackPanel>
                     </Border>
 
+                    <!-- Authentication -->
                     <Border Background="{StaticResource SurfaceBrush}"
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="12"
+                            CornerRadius="11"
                             Padding="13"
-                            Margin="0,0,0,12">
+                            Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="احراز هویت"
-                                       FontFamily="{StaticResource AppFont}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentHoverBrush}" />
-                            <TextBlock Text="کلید شما در تنظیمات امن سیستم نگهداری می‌شود."
+                                       Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="کلید API در حافظه‌ی امن ویندوز ذخیره می‌شود."
                                        Style="{StaticResource CaptionTextStyle}"
-                                       Margin="0,3,0,14" />
+                                       Margin="0,3,0,12" />
 
-                            <TextBlock Text="کلید API  ·  API key"
+                            <TextBlock Text="کلید API"
                                        Style="{StaticResource FieldLabelStyle}" />
                             <TextBox Text="{Binding ApiKey, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      Style="{StaticResource ModernTextBoxStyle}"
-                                     Margin="0,0,0,12"
+                                     FontFamily="Consolas"
+                                     Margin="0,0,0,11"
                                      ToolTip="کلید API سرویس انتخاب‌شده" />
 
-                            <TextBlock Text="آدرس پایه  ·  Base URL"
+                            <TextBlock Text="Base URL / آدرس واسطه (اختیاری)"
                                        Style="{StaticResource FieldLabelStyle}" />
                             <TextBox Text="{Binding BaseUrl, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                                      Style="{StaticResource ModernTextBoxStyle}"
-                                     ToolTip="برای Ollama یا مدل محلی اختیاری است" />
+                                     FontFamily="Consolas"
+                                     ToolTip="مثلاً https://openrouter.ai/api/v1 یا http://localhost:11434/v1" />
+                            <TextBlock Text="برای OpenAI-compatible مثل OpenRouter، LiteLLM، Ollama و LM Studio، آدرس را تا /v1 وارد کنید."
+                                       Style="{StaticResource CaptionTextStyle}"
+                                       Margin="0,7,0,0" />
 
-                            <Grid Margin="0,12,0,0">
+                            <Grid Margin="0,12,0,0" FlowDirection="LeftToRight">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="Auto" />
                                     <ColumnDefinition Width="*" />
@@ -149,34 +182,48 @@
                                         Style="{StaticResource SecondaryButtonStyle}"
                                         IsEnabled="{Binding IsTestingConnection, Converter={StaticResource InverseBooleanConverter}}"
                                         Padding="12,7" />
-                                <TextBlock Grid.Column="1"
-                                           Text="{Binding ConnectionStatusMessage}"
-                                           FontFamily="{StaticResource AppFont}"
-                                           FontSize="10"
-                                           Foreground="{StaticResource TextSecondaryBrush}"
-                                           TextWrapping="Wrap"
-                                           VerticalAlignment="Center"
-                                           Margin="10,0,0,0" />
+                                <Border Grid.Column="1"
+                                        Background="{StaticResource InputBgBrush}"
+                                        BorderBrush="{StaticResource CardBorderBrush}"
+                                        BorderThickness="1"
+                                        CornerRadius="8"
+                                        Margin="9,0,0,0"
+                                        Padding="9,6"
+                                        MinHeight="34">
+                                    <TextBlock Text="{Binding ConnectionStatusMessage}"
+                                               FontFamily="{StaticResource AppFont}"
+                                               FontSize="10"
+                                               TextWrapping="Wrap"
+                                               VerticalAlignment="Center">
+                                        <TextBlock.Style>
+                                            <Style TargetType="TextBlock">
+                                                <Setter Property="Foreground" Value="{StaticResource TextSecondaryBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsConnectionSuccess}" Value="True">
+                                                        <Setter Property="Foreground" Value="{StaticResource SuccessBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </TextBlock.Style>
+                                    </TextBlock>
+                                </Border>
                             </Grid>
                         </StackPanel>
                     </Border>
 
+                    <!-- Safety -->
                     <Border Background="{StaticResource SurfaceBrush}"
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="12"
+                            CornerRadius="11"
                             Padding="13"
-                            Margin="0,0,0,12">
+                            Margin="0,0,0,10">
                         <StackPanel>
                             <TextBlock Text="حریم خصوصی و ایمنی"
-                                       FontFamily="{StaticResource AppFont}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentHoverBrush}" />
-                            <TextBlock Text="کنترل کنید چه چیزی به مدل ارسال شود و چه عملیاتی نیازمند تأیید باشد."
+                                       Style="{StaticResource SectionTitleStyle}" />
+                            <TextBlock Text="کنترل کنید چه چیزی ارسال شود و کدام عملیات نیاز به تأیید داشته باشد."
                                        Style="{StaticResource CaptionTextStyle}"
                                        Margin="0,3,0,12" />
-
                             <CheckBox IsChecked="{Binding SendDrawingContext}"
                                       Content="ارسال وضعیت نقشه برای پاسخ دقیق‌تر"
                                       Style="{StaticResource ModernCheckBoxStyle}"
@@ -187,35 +234,31 @@
                         </StackPanel>
                     </Border>
 
+                    <!-- Display -->
                     <Border Background="{StaticResource SurfaceBrush}"
                             BorderBrush="{StaticResource CardBorderBrush}"
                             BorderThickness="1"
-                            CornerRadius="12"
+                            CornerRadius="11"
                             Padding="13">
                         <StackPanel>
                             <TextBlock Text="ترجیحات نمایش"
-                                       FontFamily="{StaticResource AppFont}"
-                                       FontSize="12"
-                                       FontWeight="SemiBold"
-                                       Foreground="{StaticResource AccentHoverBrush}"
+                                       Style="{StaticResource SectionTitleStyle}"
                                        Margin="0,0,0,12" />
-                            <Grid>
+                            <Grid FlowDirection="LeftToRight">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="12" />
+                                    <ColumnDefinition Width="10" />
                                     <ColumnDefinition Width="*" />
                                 </Grid.ColumnDefinitions>
-
-                                <StackPanel Grid.Column="0">
-                                    <TextBlock Text="زبان  ·  Language"
+                                <StackPanel Grid.Column="0" FlowDirection="RightToLeft">
+                                    <TextBlock Text="زبان"
                                                Style="{StaticResource FieldLabelStyle}" />
                                     <ComboBox ItemsSource="{Binding Languages}"
                                               SelectedItem="{Binding SelectedLanguage}"
                                               Style="{StaticResource ModernComboBoxStyle}" />
                                 </StackPanel>
-
-                                <StackPanel Grid.Column="2">
-                                    <TextBlock Text="تم  ·  Theme"
+                                <StackPanel Grid.Column="2" FlowDirection="RightToLeft">
+                                    <TextBlock Text="تم"
                                                Style="{StaticResource FieldLabelStyle}" />
                                     <ComboBox ItemsSource="{Binding Themes}"
                                               SelectedItem="{Binding SelectedTheme}"
@@ -228,24 +271,30 @@
             </ScrollViewer>
 
             <!-- Sticky footer -->
-            <Grid Grid.Row="2" Margin="0,16,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="Auto" />
-                    <ColumnDefinition Width="8" />
-                    <ColumnDefinition Width="Auto" />
-                </Grid.ColumnDefinitions>
-                <Button Grid.Column="1"
-                        Content="انصراف"
-                        Command="{Binding CloseCommand}"
-                        Style="{StaticResource SecondaryButtonStyle}"
-                        MinWidth="78" />
-                <Button Grid.Column="3"
-                        Content="ذخیره تغییرات"
-                        Command="{Binding SaveSettingsCommand}"
-                        Style="{StaticResource PrimaryButtonStyle}"
-                        MinWidth="118" />
-            </Grid>
+            <Border Grid.Row="2"
+                    BorderBrush="{StaticResource CardBorderBrush}"
+                    BorderThickness="0,1,0,0"
+                    Padding="0,13,0,0"
+                    Margin="0,13,0,0">
+                <Grid FlowDirection="LeftToRight">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="8" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="1"
+                            Content="انصراف"
+                            Command="{Binding CloseCommand}"
+                            Style="{StaticResource SecondaryButtonStyle}"
+                            MinWidth="78" />
+                    <Button Grid.Column="3"
+                            Content="ذخیره تغییرات"
+                            Command="{Binding SaveSettingsCommand}"
+                            Style="{StaticResource PrimaryButtonStyle}"
+                            MinWidth="122" />
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </UserControl>
